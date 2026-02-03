@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.title }}</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a2530 100%);
+            color: white;
+            padding: 25px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .controls {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 180px;
+        }
+
+        .form-group.label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group.label i {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .form-group input, .form-group select, .form-group button {
+            padding: 12px;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 6px 15px rgba(149, 165, 166, 0.4);
+        }
+
+        .language-switcher {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .language-switcher a {
+            color: white;
+            text-decoration: none;
+            margin: 0 5px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            transition: background 0.3s;
+        }
+
+        .language-switcher a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chart-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            height: 700px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            color: #2c3e50;
+            font-size: 1.6em;
+        }
+
+        .data-table-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+            transition: background-color 0.2s;
+        }
+
+        .cumulative-data {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .cumulative-data h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .cumulative-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .cumulative-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .cumulative-item strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .loading i {
+            font-size: 2em;
+            margin-bottom: 15px;
+            display: block;
+            color: #3498db;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-group {
+                width: 100%;
+            }
+            
+            .language-switcher {
+                position: static;
+                margin-top: 15px;
+                text-align: center;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .chart-container {
+                height: 500px;
+            }
+            
+            .cumulative-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .controls {
+                padding: 15px;
+            }
+            
+            .chart-container, .data-table-container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-switcher">
+        <a href="?lang=zh"><i class="fas fa-language"></i> {{ t.chinese }}</a> | 
+        <a href="?lang=en">{{ t.english }}</a>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chart-line"></i> {{ t.title }}</h1>
+            <div class="subtitle">{{ t.about }} - {{ t.instructions }}</div>
+        </header>
+
+        <div class="controls">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="label"><i class="fas fa-barcode"></i> {{ t.stock_code }}</label>
+                    <input type="text" id="stockCode" value="{{ default_code }}" placeholder="{{ t.stock_code }}">
+                </div>
+                <div class="form-group">
+                    <label class="label"><i class="far fa-calendar"></i> {{ t.start_date }}</label>
+                    <input type="date" id="startDate" value="{{ default_start[:4] }}-{{ default_start[4:6] }}-{{ default_start[6:] }}">
+                </div>
+                <div class="form-group">
+                    <label class="label"><i class="far fa-calendar-check"></i> {{ t.end_date }}</label>
+                    <input type="date" id="endDate" value="{{ default_end[:4] }}-{{ default_end[4:6] }}-{{ default_end[6:] }}">
+                </div>
+                <div class="form-group">
+                    <label class="label"><i class="fas fa-sync-alt"></i> {{ t.interval }}</label>
+                    <select id="interval">
+                        <option value="d">{{ t.daily }}</option>
+                        <option value="w">{{ t.weekly }}</option>
+                        <option value="m">{{ t.monthly }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="btn-group">
+                        <button id="submitBtn"><i class="fas fa-search"></i> {{ t.submit }}</button>
+                        <button id="exportBtn" class="secondary"><i class="fas fa-file-export"></i> {{ t.export_csv }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cumulativeData" class="cumulative-data" style="display: none;">
+            <h3><i class="fas fa-chart-pie"></i> {{ t.cumulative_data }}</h3>
+            <div class="cumulative-grid" id="cumulativeInfo"></div>
+        </div>
+
+        <div class="chart-container">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-area"></i> {{ t.trend_chart }}</h2>
+            </div>
+            <div id="chart" style="height: 600px;"></div>
+            <div id="chartLoading" class="loading" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+                {{ t.loading }}
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div class="section-header">
+                <h2><i class="fas fa-table"></i> {{ t.stock_data }}</h2>
+            </div>
+            <div id="tableContainer">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    {{ t.loading }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>{{ t.contact }} | Stock Market Analysis Dashboard © 2026</p>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 加载默认数据
+            fetchData();
+            
+            // 提交按钮点击事件
+            $('#submitBtn').click(function() {
+                fetchData();
+            });
+            
+            // 导出CSV按钮点击事件
+            $('#exportBtn').click(function() {
+                const stockCode = $('#stockCode').val().trim();
+                const startDate = formatDate($('#startDate').val());
+                const endDate = formatDate($('#endDate').val());
+                const interval = $('#interval').val();
+                
+                if (!stockCode) {
+                    alert('请输入股票代码');
+                    return;
+                }
+                
+                if (!startDate || !endDate) {
+                    alert('请选择开始和结束日期');
+                    return;
+                }
+                
+                // 发送POST请求导出CSV
+                const formData = {
+                    stock_code: stockCode,
+                    start_date: startDate,
+                    end_date: endDate,
+                    interval: interval
+                };
+                
+                // 使用表单提交方式下载文件
+                const form = $('<form method="POST" action="/export_csv"></form>');
+                for (const key in formData) {
+                    form.append($(`<input type="hidden" name="${key}" value="${formData[key]}">`));
+                }
+                $('body').append(form);
+                form.submit();
+                form.remove();
+            });
+            
+            // 回车键提交
+            $('input').keypress(function(e) {
+                if(e.which === 13) {
+                    fetchData();
+                }
+            });
+        });
+
+        function fetchData() {
+            const stockCode = $('#stockCode').val().trim();
+            const startDate = formatDate($('#startDate').val());
+            const endDate = formatDate($('#endDate').val());
+            const interval = $('#interval').val();
+            
+            if (!stockCode) {
+                alert('请输入股票代码');
+                return;
+            }
+            
+            if (!startDate || !endDate) {
+                alert('请选择开始和结束日期');
+                return;
+            }
+            
+            // 显示加载状态
+            $('#chartLoading').show();
+            $('#tableContainer').html(`
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    {{ t.loading }}
+                </div>
+            `);
+            
+            // 发送请求获取数据
+            $.ajax({
+                url: '/fetch_data',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    stock_code: stockCode,
+                    start_date: startDate,
+                    end_date: endDate,
+                    interval: interval
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // 隐藏加载状态
+                        $('#chartLoading').hide();
+                        
+                        // 显示累计数据
+                        if (response.cumulative_data && Object.keys(response.cumulative_data).length > 0) {
+                            const cumulativeData = response.cumulative_data;
+                            let cumulativeHtml = `
+                                <div class="cumulative-item">
+                                    <strong>{{ t.date }}</strong>
+                                    ${cumulativeData.period || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.change_amount }}</strong>
+                                    ${cumulativeData.change_amount || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.change_percent }}</strong>
+                                    ${cumulativeData.change_percent || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.low }}</strong>
+                                    ${cumulativeData.lowest || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.high }}</strong>
+                                    ${cumulativeData.highest || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.volume }}</strong>
+                                    ${cumulativeData.total_volume || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.amount }}</strong>
+                                    ${cumulativeData.total_amount || 'N/A'}
+                                </div>
+                                <div class="cumulative-item">
+                                    <strong>{{ t.turnover_rate }}</strong>
+                                    ${cumulativeData.turnover_rate || 'N/A'}
+                                </div>
+                            `;
+                            $('#cumulativeInfo').html(cumulativeHtml);
+                            $('#cumulativeData').show();
+                        } else {
+                            $('#cumulativeData').hide();
+                        }
+                        
+                        // 获取图表数据并显示
+                        getChartData();
+                        
+                        // 创建并显示表格
+                        createTable(response.data, response.columns);
+                    } else {
+                        $('#chartLoading').hide();
+                        $('#tableContainer').html(`<p style="color: #e74c3c; text-align: center; padding: 30px;"><i class="fas fa-exclamation-triangle"></i> 错误: ${response.error}</p>`);
+                        $('#cumulativeData').hide();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#chartLoading').hide();
+                    $('#tableContainer').html(`<p style="color: #e74c3c; text-align: center; padding: 30px;"><i class="fas fa-exclamation-triangle"></i> 请求失败: ${error}</p>`);
+                    $('#cumulativeData').hide();
+                }
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        function getChartData() {
+            $.get('/get_chart_data', function(response) {
+                if (response.success && response.data) {
+                    const data = JSON.parse(response.data);
+                    Plotly.newPlot('chart', data.data, data.layout, {responsive: true});
+                } else {
+                    $('#chart').html('<p style="color: #e74c3c; text-align: center; padding: 50px;"><i class="fas fa-exclamation-circle"></i> 图表数据加载失败</p>');
+                }
+            }).fail(function() {
+                $('#chart').html('<p style="color: #e74c3c; text-align: center; padding: 50px;"><i class="fas fa-exclamation-circle"></i> 图表加载失败</p>');
+            });
+        }
+
+        function createTable(data, columns) {
+            // 获取数据的所有日期（键）
+            let dates = Object.keys(data);
+            
+            if (dates.length === 0) {
+                $('#tableContainer').html('<p style="text-align: center; padding: 30px;">没有找到数据</p>');
+                return;
+            }
+            
+            // 按日期降序排序（最新的在上面）
+            dates.sort((a, b) => {
+                // 将日期字符串转换为Date对象进行比较
+                const dateA = new Date(a);
+                const dateB = new Date(b);
+                return dateB - dateA; // 降序排列
+            });
+            
+            // 创建表头
+            let tableHtml = '<table><thead><tr>';
+            columns.forEach(col => {
+                tableHtml += `<th>${getColumnName(col)}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+            
+            // 创建表格行（按降序日期排列）
+            dates.forEach(date => {
+                const row = data[date];
+                tableHtml += '<tr>';
+                tableHtml += `<td>${date}</td>`; // 日期列
+                
+                // 添加其他列的数据
+                for (let i = 0; i < row.length; i++) {
+                    tableHtml += `<td>${row[i]}</td>`;
+                }
+                
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            $('#tableContainer').html(tableHtml);
+        }
+
+        function getColumnName(colKey) {
+            const columnNames = {
+                'date': '{{ t.date }}',
+                'open': '{{ t.open }}',
+                'close': '{{ t.close }}',
+                'high': '{{ t.high }}',
+                'low': '{{ t.low }}',
+                'volume': '{{ t.volume }}',
+                'amount': '{{ t.amount }}',
+                'change_amount': '{{ t.change_amount }}',
+                'change_percent': '{{ t.change_percent }}',
+                'turnover_rate': '{{ t.turnover_rate }}'
+            };
+            return columnNames[colKey] || colKey;
+        }
+    </script>
+</body>
+</html>

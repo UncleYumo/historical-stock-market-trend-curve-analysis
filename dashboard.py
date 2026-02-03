@@ -10,13 +10,29 @@ from crawl_stock import get_stock_response, format_stock_data
 import plotly
 import plotly.graph_objs as go
 from datetime import datetime
+import os
+from dotenv import load_dotenv  # 需要先安装: pip install python-dotenv
 
 
 class StockDashboard:
     """股票仪表盘主类，管理应用状态和业务逻辑"""
     
     def __init__(self):
+        # 加载环境变量文件，优先级：.env.local > .env.prod > .env
+        env_files = ['.env.local', '.env.prod', '.env']
+        for env_file in env_files:
+            if os.path.exists(env_file):
+                load_dotenv(env_file, override=False)
+        
+        # 如果以上文件都不存在，则尝试加载 .env
+        if not any(os.path.exists(f) for f in env_files):
+            load_dotenv('.env', override=False)
+        
         self.app = Flask(__name__)
+        self.port = int(os.environ.get('PORT', 5000))
+        self.host = os.environ.get('HOST', '127.0.0.1')
+        self.debug = os.environ.get('DEBUG', 'True').lower() == 'true'
+        
         self.stock_data_map = {
             "code": "",
             "start_date": "",
@@ -311,10 +327,17 @@ class StockDashboard:
         
         return response
     
-    def run(self, debug=True):
+    def run(self, debug=None):
         """运行应用"""
-        self.app.run(debug=debug)
+        if debug is None:
+            debug = self.debug
+        self.app.run(host=self.host, port=self.port, debug=debug)
 
+
+def create_app():
+    """工厂函数，用于创建应用实例，便于生产环境部署"""
+    dashboard = StockDashboard()
+    return dashboard.app
 
 if __name__ == '__main__':
     dashboard = StockDashboard()
